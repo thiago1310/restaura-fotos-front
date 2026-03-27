@@ -1,0 +1,7 @@
+<svg width="360" height="120" viewBox="0 0 360 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="360" height="120" rx="20" fill="#FFF3EE"/>
+  <circle cx="56" cy="60" r="30" fill="#137868"/>
+  <path d="M44 60L52 68L69 50" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="102" y="56" fill="#F15200" font-family="Arial, sans-serif" font-size="30" font-weight="700">PIXEL</text>
+  <text x="102" y="86" fill="#137868" font-family="Arial, sans-serif" font-size="26" font-weight="700">DO TEMPO</text>
+</svg>
