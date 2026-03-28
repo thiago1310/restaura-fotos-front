@@ -1,4 +1,4 @@
-﻿import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import logoImage from '@/assets/logo/pixel-do-tempo.png'
 import { Button } from '@/components/ui/button'
 import { HeaderCreditsBadge } from '@/components/layout/HeaderCreditsBadge'
@@ -16,6 +16,7 @@ const LOGO_FALLBACK = '/logo-placeholder.svg'
 
 export function Navbar() {
   const credits = useAppStore((state) => state.user.credits)
+  const isAuthenticated = useAppStore((state) => state.isAuthenticated)
 
   return (
     <header className='sticky top-0 z-30 border-b border-brand-100 bg-surface/80 backdrop-blur'>
@@ -31,7 +32,6 @@ export function Navbar() {
               }
             }}
           />
-        
         </Link>
 
         <nav className='hidden items-center gap-1 md:flex'>
@@ -52,10 +52,18 @@ export function Navbar() {
         </nav>
 
         <div className='flex items-center gap-2'>
-          <HeaderCreditsBadge credits={credits} />
-          <Button variant='secondary' size='sm'>
-            Perfil
-          </Button>
+          {isAuthenticated ? (
+            <>
+              <HeaderCreditsBadge credits={credits} />
+              <Button asChild variant='secondary' size='sm'>
+                <Link to='/perfil'>Perfil</Link>
+              </Button>
+            </>
+          ) : (
+            <Button asChild variant='secondary' size='sm'>
+              <Link to='/login'>Entrar</Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>

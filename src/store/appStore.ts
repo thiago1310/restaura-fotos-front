@@ -1,4 +1,4 @@
-﻿import { create } from 'zustand'
+import { create } from 'zustand'
 import { AppStore, ProcessingOptions } from '@/types'
 import { CREDIT_PACKAGES, INITIAL_PAYMENT } from '@/services/mockData'
 import { createPixPayment } from '@/services/paymentService'
@@ -12,10 +12,12 @@ const defaultOptions: ProcessingOptions = {
 
 export const useAppStore = create<AppStore>((set, get) => ({
   user: {
-    id: 'user-1',
+    id: 'guest',
     name: 'Visitante',
-    credits: 3
+    credits: 0
   },
+  authToken: undefined,
+  isAuthenticated: false,
   creditPackages: CREDIT_PACKAGES,
   selectedPackage: undefined,
   payment: INITIAL_PAYMENT,
@@ -61,6 +63,41 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
   setCurrentOptions: (options) => {
     set({ currentOptions: options })
+  },
+  setAuthSession: ({ token, user }) => {
+    set((state) => ({
+      authToken: token,
+      isAuthenticated: true,
+      user: {
+        ...state.user,
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone
+      }
+    }))
+  },
+  setUserCredits: (credits) => {
+    set((state) => ({
+      user: {
+        ...state.user,
+        credits
+      }
+    }))
+  },
+  clearAuthSession: () => {
+    set((state) => ({
+      authToken: undefined,
+      isAuthenticated: false,
+      user: {
+        ...state.user,
+        id: 'guest',
+        name: 'Visitante',
+        email: undefined,
+        phone: undefined,
+        credits: 0
+      }
+    }))
   },
   createJob: (originalUrl) => {
     const job = {

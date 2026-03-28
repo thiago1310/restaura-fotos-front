@@ -1,6 +1,8 @@
-﻿export interface UserAccount {
+export interface UserAccount {
   id: string
   name: string
+  email?: string
+  phone?: string
   credits: number
 }
 
@@ -35,6 +37,23 @@ export interface ProcessingOptions {
   animate: boolean
 }
 
+export type RestauracaoStatusApi = 'PENDENTE' | 'PROCESSANDO' | 'CONCLUIDA' | 'FALHA'
+
+export type RestauracaoVideoStatusApi = 'NAO_SOLICITADO' | 'PROCESSANDO' | 'DISPONIVEL' | 'FALHA'
+
+export interface RestauracaoHistoricoItem {
+  id: number
+  status: RestauracaoStatusApi
+  erro: string | null
+  video: {
+    solicitado: boolean
+    status: RestauracaoVideoStatusApi
+    erro: string | null
+  }
+  criadoEm: string
+  finalizadoEm: string | null
+}
+
 export type ProcessingStep =
   | 'upload'
   | 'analysis'
@@ -45,6 +64,8 @@ export type ProcessingStep =
 
 export interface AppStore {
   user: UserAccount
+  authToken?: string
+  isAuthenticated: boolean
   creditPackages: CreditPackage[]
   selectedPackage?: CreditPackage
   payment: PaymentData
@@ -57,6 +78,12 @@ export interface AppStore {
   setPaymentFailed: () => void
   clearPayment: () => void
   setCurrentOptions: (options: ProcessingOptions) => void
+  setAuthSession: (session: {
+    token: string
+    user: Pick<UserAccount, 'id' | 'name' | 'email' | 'phone'>
+  }) => void
+  setUserCredits: (credits: number) => void
+  clearAuthSession: () => void
   createJob: (originalUrl: string) => PhotoJob
   completeJob: (result: Pick<PhotoJob, 'restoredUrl' | 'animatedUrl'>) => void
   setJobError: () => void

@@ -1,11 +1,18 @@
-﻿import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { JobHistoryList } from '@/components/dashboard/JobHistoryList'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/store/appStore'
+import { RestauracaoHistoricoItem } from '@/types'
 
 export function DashboardPage() {
   const user = useAppStore((state) => state.user)
-  const totalJobs = useAppStore((state) => state.history.length)
+  const [totalJobs, setTotalJobs] = useState(0)
+
+  function handleHistoryLoaded(jobs: RestauracaoHistoricoItem[]) {
+    const concluidas = jobs.filter((job) => job.status === 'CONCLUIDA').length
+    setTotalJobs(concluidas)
+  }
 
   return (
     <div className='space-y-6'>
@@ -33,7 +40,7 @@ export function DashboardPage() {
       </section>
       <section>
         <h2 className='mb-3 font-display text-2xl'>Historico recente</h2>
-        <JobHistoryList />
+        <JobHistoryList onHistoryLoaded={handleHistoryLoaded} />
       </section>
     </div>
   )

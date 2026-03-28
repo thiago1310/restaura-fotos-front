@@ -2,7 +2,7 @@
 
 export function Footer() {
   return (
-    <footer className='mt-16 border-t border-brand-100 bg-surface/70'>
+    <footer className='border-t border-brand-100 bg-surface/70'>
       <div className='mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-ink/70 md:flex-row md:items-center md:justify-between md:px-6'>
         <p>Pixel do Tempo - Restauracao emocional de fotos antigas com IA.</p>
         <div className='flex items-center gap-4'>
