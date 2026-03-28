@@ -1,12 +1,14 @@
-﻿import { Link } from 'react-router-dom'
 import { Check, Zap } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import { formatBRL } from '@/utils/cn'
 import { Button } from '@/components/ui/button'
 
-export function PricingCards() {
+interface PricingCardsProps {
+  onPayClick?: (packageId: string) => void
+}
+
+export function PricingCards({ onPayClick }: PricingCardsProps) {
   const creditPackages = useAppStore((state) => state.creditPackages)
-  const isAuthenticated = useAppStore((state) => state.isAuthenticated)
 
   return (
     <section className='mt-14'>
@@ -40,8 +42,8 @@ export function PricingCards() {
               </li>
             </ul>
             <div className='mt-auto pt-6'>
-              <Button asChild className='w-full'>
-                <Link to={isAuthenticated ? `/payment?package=${pkg.id}` : '/cadastro'}>Pagar com Pix</Link>
+              <Button className='w-full' onClick={() => onPayClick?.(pkg.id)}>
+                Pagar com Pix
               </Button>
             </div>
           </article>

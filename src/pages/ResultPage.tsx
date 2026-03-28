@@ -1,6 +1,6 @@
 import { Link, Navigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { downloadRestauracaoArquivo } from '@/services/restauracoesService'
+import { downloadRestauracaoArquivo, downloadRestauracaoVideo } from '@/services/restauracoesService'
 import { getStoredAuthToken } from '@/services/authService'
 import { useAppStore } from '@/store/appStore'
 import { ResultViewer } from '@/components/result/ResultViewer'
@@ -24,6 +24,12 @@ export function ResultPage() {
     await downloadRestauracaoArquivo(tokenCandidate, restauracaoId)
   }
 
+  async function handleDownloadVideo() {
+    const tokenCandidate = authToken ?? getStoredAuthToken()
+    if (!tokenCandidate) return
+    await downloadRestauracaoVideo(tokenCandidate, restauracaoId)
+  }
+
   return (
     <div>
       <h1 className='font-display text-4xl'>Sua foto foi restaurada com sucesso</h1>
@@ -37,7 +43,7 @@ export function ResultPage() {
         />
       </div>
 
-      <AnimatedPreview animatedUrl={job.animatedUrl} />
+      <AnimatedPreview animatedUrl={job.animatedUrl} onDownloadVideo={handleDownloadVideo} />
 
       <div className='mt-6 flex flex-wrap gap-3'>
         <Button asChild>

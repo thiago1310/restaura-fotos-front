@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { X } from 'lucide-react'
 import { PricingCards } from '@/components/payment/PricingCards'
 import { PaymentStatusBadge } from '@/components/payment/PaymentStatusBadge'
 import { PixQRCodeCard } from '@/components/payment/PixQRCodeCard'
@@ -15,6 +16,7 @@ export function PaymentPage() {
   const [loadingPlans, setLoadingPlans] = useState(false)
   const [plansError, setPlansError] = useState<string | null>(null)
   const [copyFeedback, setCopyFeedback] = useState('')
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
   const payment = useAppStore((state) => state.payment)
   const authToken = useAppStore((state) => state.authToken)
@@ -101,6 +103,25 @@ export function PaymentPage() {
     }
   }
 
+  const handleOpenPaymentModal = (packageId: string) => {
+    setPlansError(null)
+    setCopyFeedback('')
+
+    if (!isAuthenticated) {
+      navigate('/cadastro')
+      return
+    }
+
+    clearPayment()
+    setSelectedPackage(packageId)
+    setIsPaymentModalOpen(true)
+  }
+
+  const handleClosePaymentModal = () => {
+    setIsPaymentModalOpen(false)
+    setCopyFeedback('')
+  }
+
   const handleCopy = async () => {
     if (!payment.pixCode) return
     await navigator.clipboard.writeText(payment.pixCode)
@@ -167,30 +188,11 @@ export function PaymentPage() {
 
       {plansError ? <div className='rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700'>{plansError}</div> : null}
 
-      <PricingCards />
+      <PricingCards onPayClick={handleOpenPaymentModal} />
 
       {loadingPlans ? (
         <div className='rounded-2xl border border-brand-100 bg-white p-5 text-sm text-ink/70 shadow-sm'>Carregando planos...</div>
       ) : null}
-
-      {selectedPackage && payment.status === 'idle' && !loadingPlans && (
-        <div className='rounded-2xl border border-brand-100 bg-white p-5 shadow-sm'>
-          <p className='text-sm'>
-            Pacote selecionado: <strong>{selectedPackage.photos} fotos</strong>
-          </p>
-          <Button className='mt-4' onClick={handleStartPayment} disabled={startingPayment}>
-            {startingPayment ? 'Gerando Pix...' : 'Pagar com Pix'}
-          </Button>
-        </div>
-      )}
-
-      {payment.status === 'pending' && (
-        <>
-          <PixQRCodeCard qrCodeUrl={payment.qrCodeUrl} pixCode={payment.pixCode} onCopy={handleCopy} />
-          {copyFeedback && <p className='text-sm font-semibold text-accent'>{copyFeedback}</p>}
-          <p className='text-sm text-ink/70'>Pagamento em processamento. A confirmacao sera automatica apos o webhook.</p>
-        </>
-      )}
 
       {payment.status === 'paid' && (
         <div className='rounded-2xl border border-emerald-200 bg-emerald-50 p-5'>
@@ -204,6 +206,46 @@ export function PaymentPage() {
             <Button variant='ghost' onClick={clearPayment}>
               Comprar outro pacote
             </Button>
+          </div>
+        </div>
+      )}
+
+      {isPaymentModalOpen && selectedPackage && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4' onClick={handleClosePaymentModal}>
+          <div
+            className='relative max-h-[90vh] w-full max-w-6xl overflow-auto rounded-2xl border border-brand-100 bg-white p-5 shadow-premium'
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type='button'
+              onClick={handleClosePaymentModal}
+              className='absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand-100 text-ink/60 transition hover:text-ink'
+              aria-label='Fechar'
+            >
+              <X size={16} />
+            </button>
+
+            {payment.status === 'pending' ? (
+              <>
+                <PixQRCodeCard qrCodeUrl={payment.qrCodeUrl} pixCode={payment.pixCode} onCopy={handleCopy} />
+                {copyFeedback && <p className='mt-4 text-sm font-semibold text-accent'>{copyFeedback}</p>}
+                <p className='mt-2 text-sm text-ink/70'>
+                  Pagamento em processamento. A confirmacao sera automatica apos o webhook.
+                </p>
+              </>
+            ) : (
+              <div className='rounded-2xl border border-brand-100 bg-white p-5 shadow-sm'>
+                <p className='text-sm'>
+                  Pacote selecionado: <strong>{selectedPackage.photos} fotos</strong>
+                </p>
+                <Button className='mt-4' onClick={handleStartPayment} disabled={startingPayment || loadingPlans}>
+                  {startingPayment ? 'Gerando Pix...' : 'Pagar com Pix'}
+                </Button>
+                {payment.status === 'failed' ? (
+                  <p className='mt-3 text-sm text-red-600'>Nao foi possivel gerar o Pix. Tente novamente.</p>
+                ) : null}
+              </div>
+            )}
           </div>
         </div>
       )}

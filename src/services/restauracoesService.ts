@@ -46,7 +46,7 @@ function buildEndpointUrlWithToken(endpoint: string, token: string) {
   return url.toString()
 }
 
-async function fetchFileBlob(token: string, endpoint: string): Promise<{ blob: Blob; filename: string }> {
+async function fetchFileBlob(token: string, endpoint: string): Promise<Blob> {
   const response = await fetch(buildEndpointUrlWithToken(endpoint, token), {
     method: 'GET',
     headers: {
@@ -58,14 +58,7 @@ async function fetchFileBlob(token: string, endpoint: string): Promise<{ blob: B
     throw new Error('Falha ao baixar arquivo da restauracao.')
   }
 
-  const contentDisposition = response.headers.get('content-disposition') ?? ''
-  const fileMatch = contentDisposition.match(/filename=\"?([^\";]+)\"?/i)
-  const filename = fileMatch?.[1] ?? 'download'
-
-  return {
-    blob: await response.blob(),
-    filename
-  }
+  return response.blob()
 }
 
 function triggerBlobDownload(blob: Blob, filename: string) {
@@ -133,18 +126,18 @@ export async function getRestauracaoDetalhe(token: string, id: number): Promise<
 }
 
 export async function downloadRestauracaoArquivo(token: string, id: number) {
-  const { blob, filename } = await fetchFileBlob(token, `/restauracoes/${id}/arquivo`)
-  triggerBlobDownload(blob, filename)
+  const blob = await fetchFileBlob(token, `/restauracoes/${id}/arquivo`)
+  triggerBlobDownload(blob, `restauracao-${id}.jpg`)
 }
 
 export async function downloadRestauracaoVideo(token: string, id: number) {
-  const { blob, filename } = await fetchFileBlob(token, `/restauracoes/${id}/video`)
-  triggerBlobDownload(blob, filename)
+  const blob = await fetchFileBlob(token, `/restauracoes/${id}/video`)
+  triggerBlobDownload(blob, `video-${id}.mp4`)
 }
 
 export async function downloadRestauracaoOriginal(token: string, id: number) {
-  const { blob, filename } = await fetchFileBlob(token, `/restauracoes/${id}/original`)
-  triggerBlobDownload(blob, filename)
+  const blob = await fetchFileBlob(token, `/restauracoes/${id}/original`)
+  triggerBlobDownload(blob, `origital-${id}.jpg`)
 }
 
 export function getRestauracaoArquivoUrl(token: string, id: number) {
