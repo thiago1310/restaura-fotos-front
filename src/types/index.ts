@@ -16,6 +16,7 @@ export interface CreditPackage {
 
 export interface PaymentData {
   packageId: string
+  pagamentoId?: number
   method: 'pix'
   status: 'idle' | 'pending' | 'paid' | 'failed'
   qrCodeUrl: string
@@ -24,9 +25,13 @@ export interface PaymentData {
 
 export interface PhotoJob {
   id: string
+  restauracaoId?: number
   originalUrl: string
   restoredUrl?: string
   animatedUrl?: string
+  animateRequested?: boolean
+  videoStatus?: RestauracaoVideoStatusApi
+  processingStage?: UploadProcessingStage
   status: 'idle' | 'processing' | 'done' | 'error'
 }
 
@@ -62,18 +67,24 @@ export type ProcessingStep =
   | 'upscale'
   | 'animate'
 
+export type UploadProcessingStage = 'upload' | 'restaurando' | 'animando' | 'concluido'
+
+export type AuthBootstrapStatus = 'idle' | 'loading' | 'done'
+
 export interface AppStore {
   user: UserAccount
   authToken?: string
   isAuthenticated: boolean
+  authBootstrapStatus: AuthBootstrapStatus
   creditPackages: CreditPackage[]
   selectedPackage?: CreditPackage
   payment: PaymentData
   currentJob?: PhotoJob
   currentOptions: ProcessingOptions
   history: PhotoJob[]
+  setCreditPackages: (packages: CreditPackage[]) => void
   setSelectedPackage: (pkgId: string) => void
-  startPixPayment: (pkgId: string) => void
+  startPixPayment: (payment: Pick<PaymentData, 'packageId' | 'pagamentoId' | 'qrCodeUrl' | 'pixCode'>) => void
   confirmPayment: () => void
   setPaymentFailed: () => void
   clearPayment: () => void
@@ -82,8 +93,13 @@ export interface AppStore {
     token: string
     user: Pick<UserAccount, 'id' | 'name' | 'email' | 'phone'>
   }) => void
+  startAuthBootstrap: () => void
+  finishAuthBootstrap: () => void
   setUserCredits: (credits: number) => void
   clearAuthSession: () => void
+  setCurrentJob: (job: PhotoJob) => void
+  updateCurrentJob: (changes: Partial<PhotoJob>) => void
+  clearCurrentJob: () => void
   createJob: (originalUrl: string) => PhotoJob
   completeJob: (result: Pick<PhotoJob, 'restoredUrl' | 'animatedUrl'>) => void
   setJobError: () => void

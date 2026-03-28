@@ -243,8 +243,8 @@ export function JobHistoryList({ onHistoryLoaded }: JobHistoryListProps) {
       ) : null}
 
       {modalJob ? (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4'>
-          <div className='relative w-full max-w-3xl rounded-2xl bg-white p-4 shadow-xl'>
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4' onClick={closeModal}>
+          <div className='relative w-full max-w-3xl rounded-2xl bg-white p-4 shadow-xl' onClick={(event) => event.stopPropagation()}>
             <button
               type='button'
               className='absolute right-3 top-3 rounded-full bg-white/80 p-1 text-ink/70 hover:text-ink'

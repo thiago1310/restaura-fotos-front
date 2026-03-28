@@ -1,9 +1,8 @@
-﻿import { ProcessingStep } from '@/types'
 import { Progress } from '@/components/ui/progress'
 
 interface ProgressBarProps {
   value: number
-  currentStep?: ProcessingStep
+  currentStep?: string
   message: string
 }
 
@@ -16,7 +15,7 @@ export function ProgressBar({ value, currentStep, message }: ProgressBarProps) {
       </div>
       <Progress value={value} />
       <p className='mt-3 text-sm text-ink/70'>{message}</p>
-      {currentStep && <p className='mt-1 text-xs uppercase tracking-wide text-brand-600'>Etapa atual: {currentStep}</p>}
+      {currentStep ? <p className='mt-1 text-xs uppercase tracking-wide text-brand-600'>Etapa atual: {currentStep}</p> : null}
     </div>
   )
 }

@@ -17,6 +17,8 @@ const LOGO_FALLBACK = '/logo-placeholder.svg'
 export function Navbar() {
   const credits = useAppStore((state) => state.user.credits)
   const isAuthenticated = useAppStore((state) => state.isAuthenticated)
+  const authBootstrapStatus = useAppStore((state) => state.authBootstrapStatus)
+  const isAuthLoading = authBootstrapStatus === 'loading' || authBootstrapStatus === 'idle'
 
   return (
     <header className='sticky top-0 z-30 border-b border-brand-100 bg-surface/80 backdrop-blur'>
@@ -52,7 +54,9 @@ export function Navbar() {
         </nav>
 
         <div className='flex items-center gap-2'>
-          {isAuthenticated ? (
+          {isAuthLoading ? (
+            <div className='h-9 w-24 rounded-2xl border border-brand-100 bg-white/60' />
+          ) : isAuthenticated ? (
             <>
               <HeaderCreditsBadge credits={credits} />
               <Button asChild variant='secondary' size='sm'>

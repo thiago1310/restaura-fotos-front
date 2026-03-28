@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 
 export function PricingCards() {
   const creditPackages = useAppStore((state) => state.creditPackages)
+  const isAuthenticated = useAppStore((state) => state.isAuthenticated)
 
   return (
     <section className='mt-14'>
@@ -19,7 +20,7 @@ export function PricingCards() {
         {creditPackages.map((pkg) => (
           <article
             key={pkg.id}
-            className={`rounded-2xl border bg-white p-6 shadow-premium ${pkg.popular ? 'border-accent ring-2 ring-accent/20' : 'border-brand-100'}`}
+            className={`flex h-full flex-col rounded-2xl border bg-white p-6 shadow-premium ${pkg.popular ? 'border-accent ring-2 ring-accent/20' : 'border-brand-100'}`}
           >
             {pkg.popular && (
               <span className='mb-4 inline-flex rounded-full bg-accent px-3 py-1 text-xs font-semibold text-white'>Melhor custo-beneficio</span>
@@ -38,9 +39,11 @@ export function PricingCards() {
                 <Check size={16} className='text-accent' /> Pagamento com Pix QR Code
               </li>
             </ul>
-            <Button asChild className='mt-6 w-full'>
-              <Link to={`/payment?package=${pkg.id}`}>Pagar com Pix</Link>
-            </Button>
+            <div className='mt-auto pt-6'>
+              <Button asChild className='w-full'>
+                <Link to={isAuthenticated ? `/payment?package=${pkg.id}` : '/cadastro'}>Pagar com Pix</Link>
+              </Button>
+            </div>
           </article>
         ))}
       </div>

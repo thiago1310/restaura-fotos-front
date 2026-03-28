@@ -7,6 +7,7 @@ export const CREDIT_PACKAGES: CreditPackage[] = [
 
 export const INITIAL_PAYMENT: PaymentData = {
   packageId: '',
+  pagamentoId: undefined,
   method: 'pix',
   status: 'idle',
   qrCodeUrl: '',

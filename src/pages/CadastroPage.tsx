@@ -98,7 +98,7 @@ export function CadastroPage() {
       const credits = await getCreditBalance(response.token)
       setUserCredits(credits)
 
-      navigate('/dashboard', { replace: true })
+      navigate('/payment', { replace: true })
     } catch {
       setErrorMessage('Nao foi possivel concluir o cadastro. Revise os dados e tente novamente.')
     } finally {

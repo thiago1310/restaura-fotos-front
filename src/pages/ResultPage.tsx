@@ -1,15 +1,27 @@
-﻿import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { downloadRestauracaoArquivo } from '@/services/restauracoesService'
+import { getStoredAuthToken } from '@/services/authService'
 import { useAppStore } from '@/store/appStore'
 import { ResultViewer } from '@/components/result/ResultViewer'
 import { AnimatedPreview } from '@/components/result/AnimatedPreview'
 
 export function ResultPage() {
+  const authToken = useAppStore((state) => state.authToken)
   const currentJob = useAppStore((state) => state.currentJob)
   const credits = useAppStore((state) => state.user.credits)
 
-  if (!currentJob || currentJob.status !== 'done' || !currentJob.restoredUrl) {
+  if (!currentJob || currentJob.status !== 'done' || !currentJob.restoredUrl || !currentJob.restauracaoId) {
     return <Navigate to='/upload' replace />
+  }
+  const job = currentJob
+  const restauracaoId: number = job.restauracaoId!
+  const restoredUrl: string = job.restoredUrl!
+
+  async function handleDownloadRestored() {
+    const tokenCandidate = authToken ?? getStoredAuthToken()
+    if (!tokenCandidate) return
+    await downloadRestauracaoArquivo(tokenCandidate, restauracaoId)
   }
 
   return (
@@ -18,10 +30,14 @@ export function ResultPage() {
       <p className='mt-2 text-sm text-ink/70'>Creditos restantes apos esta restauracao: {credits}</p>
 
       <div className='mt-6'>
-        <ResultViewer originalUrl={currentJob.originalUrl} restoredUrl={currentJob.restoredUrl} />
+        <ResultViewer
+          originalUrl={job.originalUrl}
+          restoredUrl={restoredUrl}
+          onDownloadRestored={handleDownloadRestored}
+        />
       </div>
 
-      <AnimatedPreview animatedUrl={currentJob.animatedUrl} />
+      <AnimatedPreview animatedUrl={job.animatedUrl} />
 
       <div className='mt-6 flex flex-wrap gap-3'>
         <Button asChild>

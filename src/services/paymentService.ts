@@ -1,23 +1,95 @@
-﻿import { CreditPackage, PaymentData } from '@/types'
+import { CreditPackage } from '@/types'
 
-const PIX_BASE = '00020101021226930014br.gov.bcb.pix2571pix.example.com/qrcode/txid520400005303986540'
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333'
 
-export function createPixPayment(pkg: CreditPackage): PaymentData {
-  const pixCode = `${PIX_BASE}${pkg.price.toFixed(2).replace('.', '')}5802BR5915PIXEL DO TEMPO6009SAO PAULO62070503***6304ABCD`
+interface PlanoApiResponse {
+  pacoteId: string
+  nome: string
+  valor: number
+  quantidadeCreditos: number
+}
 
-  const encodedPayload = encodeURIComponent(`PACOTE:${pkg.photos}|VALOR:${pkg.price}`)
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodedPayload}`
+interface GerarPixApiResponse {
+  pagamentoId: number
+  pixCopiaECola: string
+  valor: number
+  expiracao: string
+  creditos: number
+  pacoteId: string
+  planoNome: string
+}
+
+interface StatusPagamentoApiResponse {
+  pagamentoId: number
+  status: 'PENDENTE' | 'APROVADO' | 'EXPIRADO' | 'CANCELADO'
+  creditosLiberados: number
+  atualizadoEm: string
+}
+
+function buildQrCodeUrl(pixCode: string) {
+  const encodedPayload = encodeURIComponent(pixCode)
+  return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodedPayload}`
+}
+
+export async function listPlanos(): Promise<CreditPackage[]> {
+  const response = await fetch(`${API_BASE_URL}/pagamentos/planos`, {
+    method: 'GET'
+  })
+
+  if (!response.ok) {
+    throw new Error('Nao foi possivel carregar os planos de creditos.')
+  }
+
+  const data: PlanoApiResponse[] = await response.json()
+  if (!data.length) return []
+
+  const maiorQuantidadeCreditos = Math.max(...data.map((item) => item.quantidadeCreditos))
+
+  return data.map((item) => ({
+    id: item.pacoteId,
+    name: item.nome,
+    photos: item.quantidadeCreditos,
+    price: Number(item.valor),
+    popular: item.quantidadeCreditos === maiorQuantidadeCreditos
+  }))
+}
+
+export async function gerarPix(token: string, pacoteId: string) {
+  const response = await fetch(`${API_BASE_URL}/pagamentos/pix/qrcode`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ pacoteId })
+  })
+
+  if (!response.ok) {
+    throw new Error('Nao foi possivel gerar o Pix para este pacote.')
+  }
+
+  const data: GerarPixApiResponse = await response.json()
 
   return {
-    packageId: pkg.id,
-    method: 'pix',
-    status: 'pending',
-    qrCodeUrl,
-    pixCode
+    packageId: data.pacoteId,
+    qrCodeUrl: buildQrCodeUrl(data.pixCopiaECola),
+    pixCode: data.pixCopiaECola,
+    pagamentoId: data.pagamentoId,
+    expiracao: data.expiracao
   }
 }
 
-export async function confirmPixPayment(): Promise<'paid'> {
-  await new Promise((resolve) => setTimeout(resolve, 1200))
-  return 'paid'
+export async function consultarStatusPagamento(token: string, pagamentoId: number): Promise<StatusPagamentoApiResponse> {
+  const response = await fetch(`${API_BASE_URL}/pagamentos/${pagamentoId}/status`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Nao foi possivel consultar o status do pagamento.')
+  }
+
+  return response.json()
 }

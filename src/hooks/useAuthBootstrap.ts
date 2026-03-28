@@ -1,21 +1,22 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { clearStoredAuthToken, getCreditBalance, getStoredAuthToken, validateToken } from '@/services/authService'
 import { useAppStore } from '@/store/appStore'
 
 export function useAuthBootstrap() {
-  const hasBootstrapped = useRef(false)
-  const isAuthenticated = useAppStore((state) => state.isAuthenticated)
   const setAuthSession = useAppStore((state) => state.setAuthSession)
+  const startAuthBootstrap = useAppStore((state) => state.startAuthBootstrap)
+  const finishAuthBootstrap = useAppStore((state) => state.finishAuthBootstrap)
   const setUserCredits = useAppStore((state) => state.setUserCredits)
   const clearAuthSession = useAppStore((state) => state.clearAuthSession)
 
   useEffect(() => {
-    if (hasBootstrapped.current) return
-    hasBootstrapped.current = true
-
     const tokenCandidate = getStoredAuthToken()
-    if (!tokenCandidate || isAuthenticated) return
+    if (!tokenCandidate) {
+      finishAuthBootstrap()
+      return
+    }
     const jwtToken = tokenCandidate
+    startAuthBootstrap()
 
     let cancelled = false
 
@@ -41,6 +42,10 @@ export function useAuthBootstrap() {
         if (cancelled) return
         clearStoredAuthToken()
         clearAuthSession()
+      } finally {
+        if (!cancelled) {
+          finishAuthBootstrap()
+        }
       }
     }
 
@@ -49,5 +54,5 @@ export function useAuthBootstrap() {
     return () => {
       cancelled = true
     }
-  }, [isAuthenticated, setAuthSession, setUserCredits, clearAuthSession])
+  }, [setAuthSession, startAuthBootstrap, finishAuthBootstrap, setUserCredits, clearAuthSession])
 }

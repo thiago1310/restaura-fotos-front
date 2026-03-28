@@ -5,12 +5,10 @@ import { Input } from '@/components/ui/input'
 interface PixQRCodeCardProps {
   qrCodeUrl: string
   pixCode: string
-  onConfirm: () => void
   onCopy: () => void
-  loading?: boolean
 }
 
-export function PixQRCodeCard({ qrCodeUrl, pixCode, onConfirm, onCopy, loading }: PixQRCodeCardProps) {
+export function PixQRCodeCard({ qrCodeUrl, pixCode, onCopy }: PixQRCodeCardProps) {
   return (
     <div className='rounded-2xl border border-brand-100 bg-white p-5 shadow-premium'>
       <h3 className='font-display text-2xl'>Pagamento Pix</h3>
@@ -26,9 +24,6 @@ export function PixQRCodeCard({ qrCodeUrl, pixCode, onConfirm, onCopy, loading }
               <Copy size={16} />
             </Button>
           </div>
-          <Button className='mt-4 w-full md:w-auto' onClick={onConfirm} disabled={loading}>
-            {loading ? 'Confirmando...' : 'Confirmar pagamento'}
-          </Button>
         </div>
       </div>
     </div>

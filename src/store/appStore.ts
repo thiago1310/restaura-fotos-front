@@ -1,7 +1,13 @@
 import { create } from 'zustand'
 import { AppStore, ProcessingOptions } from '@/types'
-import { CREDIT_PACKAGES, INITIAL_PAYMENT } from '@/services/mockData'
-import { createPixPayment } from '@/services/paymentService'
+import { INITIAL_PAYMENT } from '@/services/mockData'
+
+const STORED_AUTH_TOKEN_KEY = 'restaura_fotos_auth_token'
+
+function getInitialBootstrapStatus() {
+  if (typeof window === 'undefined') return 'idle' as const
+  return localStorage.getItem(STORED_AUTH_TOKEN_KEY) ? ('loading' as const) : ('done' as const)
+}
 
 const defaultOptions: ProcessingOptions = {
   restore: true,
@@ -18,22 +24,35 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
   authToken: undefined,
   isAuthenticated: false,
-  creditPackages: CREDIT_PACKAGES,
+  authBootstrapStatus: getInitialBootstrapStatus(),
+  creditPackages: [],
   selectedPackage: undefined,
   payment: INITIAL_PAYMENT,
   currentJob: undefined,
   currentOptions: defaultOptions,
   history: [],
+  setCreditPackages: (packages) => {
+    set({ creditPackages: packages })
+  },
   setSelectedPackage: (pkgId) => {
     const selected = get().creditPackages.find((pkg) => pkg.id === pkgId)
     set({ selectedPackage: selected })
   },
-  startPixPayment: (pkgId) => {
-    const selected = get().creditPackages.find((pkg) => pkg.id === pkgId)
+  startPixPayment: ({ packageId, pagamentoId, qrCodeUrl, pixCode }) => {
+    const selected = get().creditPackages.find((pkg) => pkg.id === packageId)
     if (!selected) return
 
-    const payment = createPixPayment(selected)
-    set({ selectedPackage: selected, payment })
+    set({
+      selectedPackage: selected,
+      payment: {
+        packageId,
+        pagamentoId,
+        method: 'pix',
+        status: 'pending',
+        qrCodeUrl,
+        pixCode
+      }
+    })
   },
   confirmPayment: () => {
     const selected = get().selectedPackage
@@ -77,6 +96,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
       }
     }))
   },
+  startAuthBootstrap: () => {
+    set({ authBootstrapStatus: 'loading' })
+  },
+  finishAuthBootstrap: () => {
+    set({ authBootstrapStatus: 'done' })
+  },
   setUserCredits: (credits) => {
     set((state) => ({
       user: {
@@ -98,6 +123,23 @@ export const useAppStore = create<AppStore>((set, get) => ({
         credits: 0
       }
     }))
+  },
+  setCurrentJob: (job) => {
+    set({ currentJob: job })
+  },
+  updateCurrentJob: (changes) => {
+    set((state) => {
+      if (!state.currentJob) return state
+      return {
+        currentJob: {
+          ...state.currentJob,
+          ...changes
+        }
+      }
+    })
+  },
+  clearCurrentJob: () => {
+    set({ currentJob: undefined })
   },
   createJob: (originalUrl) => {
     const job = {

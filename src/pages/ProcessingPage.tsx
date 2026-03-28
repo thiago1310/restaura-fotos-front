@@ -1,52 +1,140 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { ProcessingStep } from '@/types'
-import { useAppStore } from '@/store/appStore'
-import { runMockProcessing, getProcessingSteps } from '@/services/photoService'
-import { PROCESSING_LABELS } from '@/services/mockData'
+import { CheckCircle2 } from 'lucide-react'
 import { ProgressBar } from '@/components/result/ProgressBar'
-import { ProcessingTimeline } from '@/components/result/ProcessingTimeline'
+import { getCreditBalance, getStoredAuthToken } from '@/services/authService'
+import { getRestauracaoArquivoUrl, getRestauracaoDetalhe, getRestauracaoVideoUrl } from '@/services/restauracoesService'
+import { useAppStore } from '@/store/appStore'
+
+type SimpleProcessingStage = 'upload' | 'restaurando' | 'concluido'
+
+const STAGE_LABELS: Record<SimpleProcessingStage, string> = {
+  upload: 'Upload',
+  restaurando: 'Restaurando',
+  concluido: 'Concluido'
+}
+
+const STAGE_MESSAGES: Record<SimpleProcessingStage, string> = {
+  upload: 'Upload da foto realizado com sucesso.',
+  restaurando: 'Estamos restaurando sua imagem com IA.',
+  concluido: 'Restauracao finalizada com sucesso.'
+}
 
 export function ProcessingPage() {
   const navigate = useNavigate()
+  const authToken = useAppStore((state) => state.authToken)
   const currentJob = useAppStore((state) => state.currentJob)
-  const options = useAppStore((state) => state.currentOptions)
-  const completeJob = useAppStore((state) => state.completeJob)
-  const setJobError = useAppStore((state) => state.setJobError)
+  const setUserCredits = useAppStore((state) => state.setUserCredits)
+  const updateCurrentJob = useAppStore((state) => state.updateCurrentJob)
 
-  const steps = useMemo(() => getProcessingSteps(options), [options])
-  const [progress, setProgress] = useState(0)
-  const [step, setStep] = useState<ProcessingStep>()
-  const [message, setMessage] = useState('Preparando o pipeline de restauracao...')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [progress, setProgress] = useState(8)
+
+  const stage: SimpleProcessingStage =
+    currentJob?.processingStage === 'concluido'
+      ? 'concluido'
+      : currentJob?.processingStage === 'upload'
+      ? 'upload'
+      : 'restaurando'
+
+  const timelineStages = useMemo<SimpleProcessingStage[]>(() => ['upload', 'restaurando', 'concluido'], [])
 
   useEffect(() => {
-    let isMounted = true
+    const interval = window.setInterval(() => {
+      setProgress((current) => {
+        if (stage === 'concluido') {
+          if (current >= 100) return 100
+          return Math.min(100, current + 4)
+        }
 
-    async function processPhoto() {
+        if (current < 20) {
+          return Math.min(20, current + 2)
+        }
+
+        if (current < 95) {
+          return Math.min(95, current + 1)
+        }
+
+        return current
+      })
+    }, 350)
+
+    return () => {
+      window.clearInterval(interval)
+    }
+  }, [stage])
+
+  useEffect(() => {
+    const maybeRestauracaoId = currentJob?.restauracaoId
+    if (!maybeRestauracaoId) return
+    const restauracaoId: number = maybeRestauracaoId
+
+    const tokenCandidate = authToken ?? getStoredAuthToken()
+    if (!tokenCandidate) {
+      setErrorMessage('Sessao expirada. Faca login novamente.')
+      return
+    }
+    const token = tokenCandidate
+
+    let disposed = false
+
+    async function pollStatus() {
       try {
-        const result = await runMockProcessing(options, (value, currentStep) => {
-          if (!isMounted) return
-          setProgress(value)
-          setStep(currentStep)
-          setMessage(PROCESSING_LABELS[currentStep])
+        const detalhe = await getRestauracaoDetalhe(token, restauracaoId)
+        if (disposed) return
+
+        if (detalhe.status === 'FALHA') {
+          updateCurrentJob({ status: 'error' })
+          setErrorMessage(detalhe.erro || 'Falha ao processar restauracao.')
+          return
+        }
+
+        const nextStage: SimpleProcessingStage = detalhe.urls.arquivoRestaurado ? 'concluido' : 'restaurando'
+
+        updateCurrentJob({
+          processingStage: nextStage,
+          videoStatus: detalhe.video.status
         })
 
-        if (!isMounted) return
-        completeJob(result)
-        setTimeout(() => navigate('/result'), 800)
+        if (detalhe.urls.arquivoRestaurado) {
+          setProgress(100)
+
+          updateCurrentJob({
+            status: 'done',
+            restoredUrl: getRestauracaoArquivoUrl(token, detalhe.id),
+            animatedUrl: detalhe.urls.video ? getRestauracaoVideoUrl(token, detalhe.id) : undefined,
+            processingStage: 'concluido'
+          })
+
+          try {
+            const credits = await getCreditBalance(token)
+            if (!disposed) {
+              setUserCredits(credits)
+            }
+          } catch {
+            // Se falhar atualizar saldo, nao bloqueia o fluxo.
+          }
+
+          if (!disposed) {
+            setTimeout(() => navigate('/result'), 700)
+          }
+        }
       } catch {
-        setJobError()
+        if (disposed) return
+        setErrorMessage('Nao foi possivel consultar o status da restauracao.')
       }
     }
 
-    void processPhoto()
+    pollStatus()
+    const interval = window.setInterval(pollStatus, 4000)
 
     return () => {
-      isMounted = false
+      disposed = true
+      window.clearInterval(interval)
     }
-  }, [completeJob, navigate, options, setJobError])
+  }, [authToken, currentJob?.restauracaoId, navigate, setUserCredits, updateCurrentJob])
 
-  if (!currentJob) {
+  if (!currentJob || !currentJob.restauracaoId) {
     return <Navigate to='/upload' replace />
   }
 
@@ -54,10 +142,30 @@ export function ProcessingPage() {
     <div className='grid gap-6 md:grid-cols-[1.2fr,0.8fr]'>
       <div className='space-y-4'>
         <h1 className='font-display text-4xl'>Estamos restaurando sua memoria</h1>
-        <p className='text-sm text-ink/70'>Seu arquivo esta em processamento seguro. Leva menos de um minuto na simulacao.</p>
-        <ProgressBar value={progress} currentStep={step} message={message} />
+        <p className='text-sm text-ink/70'>Seu arquivo esta em processamento seguro.</p>
+        <ProgressBar value={progress} currentStep={STAGE_LABELS[stage]} message={STAGE_MESSAGES[stage]} />
+        {errorMessage ? <p className='text-sm text-red-600'>{errorMessage}</p> : null}
       </div>
-      <ProcessingTimeline steps={steps} currentStep={step} />
+
+      <ol className='space-y-3 rounded-2xl border border-brand-100 bg-white p-5 shadow-sm'>
+        {timelineStages.map((item, index) => {
+          const activeIndex = timelineStages.indexOf(stage)
+          const isActive = index <= activeIndex
+
+          return (
+            <li key={item} className='flex items-center gap-3'>
+              <span
+                className={`inline-flex h-7 w-7 items-center justify-center rounded-full ${
+                  isActive ? 'bg-accent text-white' : 'bg-brand-100 text-brand-700'
+                }`}
+              >
+                {index < activeIndex ? <CheckCircle2 size={16} /> : index + 1}
+              </span>
+              <span className={isActive ? 'font-semibold text-ink' : 'text-ink/60'}>{STAGE_LABELS[item]}</span>
+            </li>
+          )
+        })}
+      </ol>
     </div>
   )
 }
