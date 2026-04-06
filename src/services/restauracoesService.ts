@@ -1,6 +1,6 @@
+import { API_BASE_URL } from '@/services/apiConfig'
+import { throwApiError } from '@/services/http'
 import { RestauracaoHistoricoItem } from '@/types'
-
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333'
 
 interface ListRestauracoesResponse {
   pagina: number
@@ -55,7 +55,7 @@ async function fetchFileBlob(token: string, endpoint: string): Promise<Blob> {
   })
 
   if (!response.ok) {
-    throw new Error('Falha ao baixar arquivo da restauracao.')
+    await throwApiError(response, 'Falha ao baixar arquivo da restauracao.')
   }
 
   return response.blob()
@@ -81,7 +81,7 @@ export async function listRestauracoes(token: string, pagina = 1, limite = 10): 
   })
 
   if (!response.ok) {
-    throw new Error('Nao foi possivel carregar o historico de restauracoes.')
+    await throwApiError(response, 'Nao foi possivel carregar o historico de restauracoes.')
   }
 
   return response.json()
@@ -104,7 +104,7 @@ export async function createRestauracao(token: string, payload: CriarRestauracao
   })
 
   if (!response.ok) {
-    throw new Error('Nao foi possivel iniciar a restauracao.')
+    await throwApiError(response, 'Nao foi possivel iniciar a restauracao.')
   }
 
   return response.json()
@@ -119,7 +119,7 @@ export async function getRestauracaoDetalhe(token: string, id: number): Promise<
   })
 
   if (!response.ok) {
-    throw new Error('Nao foi possivel consultar o status da restauracao.')
+    await throwApiError(response, 'Nao foi possivel consultar o status da restauracao.')
   }
 
   return response.json()

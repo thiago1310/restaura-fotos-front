@@ -7,11 +7,13 @@ interface ProgressBarProps {
 }
 
 export function ProgressBar({ value, currentStep, message }: ProgressBarProps) {
+  const displayedValue = Math.round(value)
+
   return (
     <div className='rounded-2xl border border-brand-100 bg-white p-5 shadow-sm'>
       <div className='mb-3 flex items-center justify-between text-sm'>
         <span className='font-semibold'>Progresso da restauracao</span>
-        <span className='text-brand-700'>{value}%</span>
+        <span className='text-brand-700'>{displayedValue}%</span>
       </div>
       <Progress value={value} />
       <p className='mt-3 text-sm text-ink/70'>{message}</p>

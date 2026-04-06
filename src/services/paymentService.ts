@@ -1,6 +1,6 @@
+import { API_BASE_URL } from '@/services/apiConfig'
+import { throwApiError } from '@/services/http'
 import { CreditPackage } from '@/types'
-
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333'
 
 interface PlanoApiResponse {
   pacoteId: string
@@ -37,7 +37,7 @@ export async function listPlanos(): Promise<CreditPackage[]> {
   })
 
   if (!response.ok) {
-    throw new Error('Nao foi possivel carregar os planos de creditos.')
+    await throwApiError(response, 'Nao foi possivel carregar os planos de creditos.')
   }
 
   const data: PlanoApiResponse[] = await response.json()
@@ -65,7 +65,7 @@ export async function gerarPix(token: string, pacoteId: string) {
   })
 
   if (!response.ok) {
-    throw new Error('Nao foi possivel gerar o Pix para este pacote.')
+    await throwApiError(response, 'Nao foi possivel gerar o Pix para este pacote.')
   }
 
   const data: GerarPixApiResponse = await response.json()
@@ -88,7 +88,7 @@ export async function consultarStatusPagamento(token: string, pagamentoId: numbe
   })
 
   if (!response.ok) {
-    throw new Error('Nao foi possivel consultar o status do pagamento.')
+    await throwApiError(response, 'Nao foi possivel consultar o status do pagamento.')
   }
 
   return response.json()

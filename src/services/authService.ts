@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333'
+import { API_BASE_URL } from '@/services/apiConfig'
+import { throwApiError } from '@/services/http'
 const AUTH_TOKEN_STORAGE_KEY = 'restaura_fotos_auth_token'
 
 interface BackendUsuario {
@@ -42,7 +43,7 @@ export async function requestLoginLink(email: string): Promise<LoginLinkResponse
   })
 
   if (!response.ok) {
-    throw new Error('Nao foi possivel enviar o link de login.')
+    await throwApiError(response, 'Nao foi possivel enviar o link de login.')
   }
 
   return response.json()
@@ -58,7 +59,7 @@ export async function registerUser(payload: CadastroPayload): Promise<CadastroRe
   })
 
   if (!response.ok) {
-    throw new Error('Nao foi possivel concluir o cadastro.')
+    await throwApiError(response, 'Nao foi possivel concluir o cadastro.')
   }
 
   return response.json()
@@ -73,7 +74,7 @@ export async function validateToken(token: string): Promise<ValidarTokenResponse
   })
 
   if (!response.ok) {
-    throw new Error('Token invalido ou expirado.')
+    await throwApiError(response, 'Token invalido ou expirado.')
   }
 
   return response.json()
@@ -88,7 +89,7 @@ export async function getCreditBalance(token: string): Promise<number> {
   })
 
   if (!response.ok) {
-    throw new Error('Nao foi possivel obter o saldo de creditos.')
+    await throwApiError(response, 'Nao foi possivel obter o saldo de creditos.')
   }
 
   const data: SaldoCreditosResponse = await response.json()

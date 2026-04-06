@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { CheckCircle2 } from 'lucide-react'
 import { ProgressBar } from '@/components/result/ProgressBar'
 import { getCreditBalance, getStoredAuthToken } from '@/services/authService'
+import { getErrorMessage } from '@/services/http'
 import { getRestauracaoArquivoUrl, getRestauracaoDetalhe, getRestauracaoVideoUrl } from '@/services/restauracoesService'
 import { useAppStore } from '@/store/appStore'
 
@@ -44,20 +45,40 @@ export function ProcessingPage() {
       setProgress((current) => {
         if (stage === 'concluido') {
           if (current >= 100) return 100
-          return Math.min(100, current + 4)
+          return Math.min(100, current + 5)
         }
 
-        if (current < 20) {
-          return Math.min(20, current + 2)
+        if (current < 15) {
+          return Math.min(15, current + 0.5)
         }
 
-        if (current < 95) {
-          return Math.min(95, current + 1)
+        if (current < 32) {
+          return Math.min(32, current + 0.45)
+        }
+
+        if (current < 52) {
+          return Math.min(52, current + 0.3)
+        }
+
+        if (current < 68) {
+          return Math.min(68, current + 0.18)
+        }
+
+        if (current < 80) {
+          return Math.min(80, current + 0.12)
+        }
+
+        if (current < 87) {
+          return Math.min(87, current + 0.08)
+        }
+
+        if (current < 90) {
+          return Math.min(90, current + 0.04)
         }
 
         return current
       })
-    }, 350)
+    }, 650)
 
     return () => {
       window.clearInterval(interval)
@@ -119,9 +140,9 @@ export function ProcessingPage() {
             setTimeout(() => navigate('/result'), 700)
           }
         }
-      } catch {
+      } catch (error) {
         if (disposed) return
-        setErrorMessage('Nao foi possivel consultar o status da restauracao.')
+        setErrorMessage(getErrorMessage(error, 'Nao foi possivel consultar o status da restauracao.'))
       }
     }
 

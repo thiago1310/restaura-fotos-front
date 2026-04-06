@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { getErrorMessage } from '@/services/http'
 import { getCreditBalance, registerUser, setStoredAuthToken } from '@/services/authService'
 import { useAppStore } from '@/store/appStore'
 
@@ -99,8 +100,8 @@ export function CadastroPage() {
       setUserCredits(credits)
 
       navigate('/payment', { replace: true })
-    } catch {
-      setErrorMessage('Nao foi possivel concluir o cadastro. Revise os dados e tente novamente.')
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'Nao foi possivel concluir o cadastro. Revise os dados e tente novamente.'))
     } finally {
       setIsSubmitting(false)
     }

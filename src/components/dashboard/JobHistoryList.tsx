@@ -3,6 +3,7 @@ import { Clock3, RefreshCw, X } from 'lucide-react'
 import placeholderImage from '/logo-placeholder.svg'
 import { Button } from '@/components/ui/button'
 import { getStoredAuthToken } from '@/services/authService'
+import { getErrorMessage } from '@/services/http'
 import {
   downloadRestauracaoArquivo,
   downloadRestauracaoOriginal,
@@ -63,9 +64,9 @@ export function JobHistoryList({ onHistoryLoaded }: JobHistoryListProps) {
         setJobs(response.itens)
         onHistoryLoaded?.(response.itens)
         setErrorMessage(null)
-      } catch {
+      } catch (error) {
         if (disposed) return
-        setErrorMessage('Nao foi possivel carregar o historico de restauracoes.')
+        setErrorMessage(getErrorMessage(error, 'Nao foi possivel carregar o historico de restauracoes.'))
       } finally {
         if (!disposed) {
           setIsLoading(false)
@@ -115,8 +116,8 @@ export function JobHistoryList({ onHistoryLoaded }: JobHistoryListProps) {
     setActionErrorMessage(null)
     try {
       await downloadRestauracaoOriginal(jwtToken, id)
-    } catch {
-      setActionErrorMessage('Download da foto original indisponivel no momento.')
+    } catch (error) {
+      setActionErrorMessage(getErrorMessage(error, 'Download da foto original indisponivel no momento.'))
     } finally {
       setDownloadingId(null)
     }

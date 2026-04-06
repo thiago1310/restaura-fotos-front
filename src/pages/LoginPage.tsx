@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { getErrorMessage } from '@/services/http'
 import {
   clearStoredAuthToken,
   getCreditBalance,
@@ -61,12 +62,12 @@ export function LoginPage() {
         setUserCredits(credits)
 
         navigate('/dashboard', { replace: true })
-      } catch {
+      } catch (error) {
         if (cancelled) return
         clearStoredAuthToken()
         clearAuthSession()
         setInfoMessage(null)
-        setErrorMessage('Nao foi possivel validar o token de login.')
+        setErrorMessage(getErrorMessage(error, 'Nao foi possivel validar o token de login.'))
         if (tokenFromUrl) {
           navigate('/login', { replace: true })
         }
@@ -94,8 +95,8 @@ export function LoginPage() {
     try {
       const response = await requestLoginLink(email)
       setInfoMessage(response.message)
-    } catch {
-      setErrorMessage('Falha ao solicitar login. Confira o e-mail e tente novamente.')
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'Falha ao solicitar login. Confira o e-mail e tente novamente.'))
     } finally {
       setIsSubmitting(false)
     }

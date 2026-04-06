@@ -6,6 +6,7 @@ import { PhotoPreviewCard } from '@/components/upload/PhotoPreviewCard'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { getStoredAuthToken } from '@/services/authService'
+import { getErrorMessage } from '@/services/http'
 import { createRestauracao } from '@/services/restauracoesService'
 import { useAppStore } from '@/store/appStore'
 
@@ -54,8 +55,8 @@ export function UploadPage() {
       })
 
       navigate('/processing')
-    } catch {
-      setErrorMessage('Falha ao enviar a foto para restauracao. Tente novamente.')
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'Falha ao enviar a foto para restauracao. Tente novamente.'))
     } finally {
       setIsSubmitting(false)
     }

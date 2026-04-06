@@ -13,7 +13,7 @@ export function ResultViewer({ originalUrl, restoredUrl, onDownloadRestored }: R
       <article className='rounded-2xl border border-brand-100 bg-white p-4 shadow-sm'>
         <h3 className='mb-3 text-sm font-semibold uppercase tracking-wide text-ink/60'>Antes</h3>
         <div className='flex h-72 w-full items-center justify-center rounded-xl bg-brand-50 p-2'>
-          <img src={originalUrl} alt='Imagem original' className='h-full w-full rounded-xl object-contain grayscale' />
+          <img src={originalUrl} alt='Imagem original' className='h-full w-full rounded-xl object-contain' />
         </div>
       </article>
       <article className='rounded-2xl border border-brand-100 bg-white p-4 shadow-sm'>

@@ -6,6 +6,7 @@ import { PaymentStatusBadge } from '@/components/payment/PaymentStatusBadge'
 import { PixQRCodeCard } from '@/components/payment/PixQRCodeCard'
 import { Button } from '@/components/ui/button'
 import { getCreditBalance, getStoredAuthToken } from '@/services/authService'
+import { getErrorMessage } from '@/services/http'
 import { consultarStatusPagamento, gerarPix, listPlanos } from '@/services/paymentService'
 import { useAppStore } from '@/store/appStore'
 
@@ -32,6 +33,7 @@ export function PaymentPage() {
   const clearPayment = useAppStore((state) => state.clearPayment)
 
   const packageFromQuery = useMemo(() => searchParams.get('package'), [searchParams])
+  const isPixPending = payment.status === 'pending'
 
   useEffect(() => {
     let cancelled = false
@@ -43,9 +45,9 @@ export function PaymentPage() {
         const plans = await listPlanos()
         if (cancelled) return
         setCreditPackages(plans)
-      } catch {
+      } catch (error) {
         if (cancelled) return
-        setPlansError('Nao foi possivel carregar os planos de creditos no momento.')
+        setPlansError(getErrorMessage(error, 'Nao foi possivel carregar os planos de creditos no momento.'))
       } finally {
         if (!cancelled) {
           setLoadingPlans(false)
@@ -96,8 +98,8 @@ export function PaymentPage() {
         qrCodeUrl: pix.qrCodeUrl,
         pixCode: pix.pixCode
       })
-    } catch {
-      setPlansError('Falha ao gerar o Pix para o pacote selecionado.')
+    } catch (error) {
+      setPlansError(getErrorMessage(error, 'Falha ao gerar o Pix para o pacote selecionado.'))
     } finally {
       setStartingPayment(false)
     }
@@ -213,19 +215,21 @@ export function PaymentPage() {
       {isPaymentModalOpen && selectedPackage && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4' onClick={handleClosePaymentModal}>
           <div
-            className='relative max-h-[90vh] w-full max-w-6xl overflow-auto rounded-2xl border border-brand-100 bg-white p-5 shadow-premium'
+            className={`relative w-full overflow-auto rounded-2xl border border-brand-100 bg-white px-5 pb-5 pt-14 shadow-premium ${
+              isPixPending ? 'max-h-[90vh] max-w-6xl' : 'max-h-[40vh] max-w-5xl'
+            }`}
             onClick={(event) => event.stopPropagation()}
           >
             <button
               type='button'
               onClick={handleClosePaymentModal}
-              className='absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand-100 text-ink/60 transition hover:text-ink'
+              className='absolute right-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-brand-100 bg-white text-ink/60 shadow-sm transition hover:text-ink'
               aria-label='Fechar'
             >
               <X size={16} />
             </button>
 
-            {payment.status === 'pending' ? (
+            {isPixPending ? (
               <>
                 <PixQRCodeCard qrCodeUrl={payment.qrCodeUrl} pixCode={payment.pixCode} onCopy={handleCopy} />
                 {copyFeedback && <p className='mt-4 text-sm font-semibold text-accent'>{copyFeedback}</p>}
@@ -234,7 +238,7 @@ export function PaymentPage() {
                 </p>
               </>
             ) : (
-              <div className='rounded-2xl border border-brand-100 bg-white p-5 shadow-sm'>
+              <div className='rounded-2xl border border-brand-100 bg-white p-5 pr-16 shadow-sm'>
                 <p className='text-sm'>
                   Pacote selecionado: <strong>{selectedPackage.photos} fotos</strong>
                 </p>
