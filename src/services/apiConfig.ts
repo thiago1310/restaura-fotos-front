@@ -9,7 +9,7 @@ function resolveApiBaseUrl() {
     return normalizeBaseUrl(configuredUrl)
   }
 
-  const hostedDefaultUrl = 'https://recuperarbk.seu.dev.br'
+  const hostedDefaultUrl = 'https://api.retauraphoto.com.br'
 
   if (typeof window !== 'undefined') {
     const { hostname } = window.location

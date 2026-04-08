@@ -31,6 +31,16 @@ export function ProcessingPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [progress, setProgress] = useState(8)
 
+  function redirectToDashboardWithError(message: string) {
+    updateCurrentJob({ status: 'error' })
+    navigate('/dashboard', {
+      replace: true,
+      state: {
+        processingErrorMessage: message
+      }
+    })
+  }
+
   const stage: SimpleProcessingStage =
     currentJob?.processingStage === 'concluido'
       ? 'concluido'
@@ -92,7 +102,9 @@ export function ProcessingPage() {
 
     const tokenCandidate = authToken ?? getStoredAuthToken()
     if (!tokenCandidate) {
-      setErrorMessage('Sessao expirada. Faca login novamente.')
+      const message = 'Sessao expirada. Faca login novamente.'
+      setErrorMessage(message)
+      redirectToDashboardWithError(message)
       return
     }
     const token = tokenCandidate
@@ -105,8 +117,9 @@ export function ProcessingPage() {
         if (disposed) return
 
         if (detalhe.status === 'FALHA') {
-          updateCurrentJob({ status: 'error' })
-          setErrorMessage(detalhe.erro || 'Falha ao processar restauracao.')
+          const message = detalhe.erro || 'Aconteceu um erro ao processar a restauracao.'
+          setErrorMessage(message)
+          redirectToDashboardWithError(message)
           return
         }
 
@@ -142,7 +155,9 @@ export function ProcessingPage() {
         }
       } catch (error) {
         if (disposed) return
-        setErrorMessage(getErrorMessage(error, 'Nao foi possivel consultar o status da restauracao.'))
+        const message = getErrorMessage(error, 'Aconteceu um erro ao consultar o status da restauracao.')
+        setErrorMessage(message)
+        redirectToDashboardWithError(message)
       }
     }
 

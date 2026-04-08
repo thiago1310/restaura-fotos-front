@@ -35,9 +35,13 @@ export function useAuthBootstrap() {
           }
         })
 
-        const credits = await getCreditBalance(jwtToken)
-        if (cancelled) return
-        setUserCredits(credits)
+        try {
+          const credits = await getCreditBalance(jwtToken)
+          if (cancelled) return
+          setUserCredits(credits)
+        } catch {
+          // Se a API de creditos falhar, mantemos a sessao autenticada.
+        }
       } catch {
         if (cancelled) return
         clearStoredAuthToken()

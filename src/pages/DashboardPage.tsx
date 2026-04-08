@@ -1,13 +1,21 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { JobHistoryList } from '@/components/dashboard/JobHistoryList'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/store/appStore'
 import { RestauracaoHistoricoItem } from '@/types'
 
 export function DashboardPage() {
+  const location = useLocation()
   const user = useAppStore((state) => state.user)
   const [totalJobs, setTotalJobs] = useState(0)
+  const processingErrorMessage =
+    typeof location.state === 'object' &&
+    location.state &&
+    'processingErrorMessage' in location.state &&
+    typeof location.state.processingErrorMessage === 'string'
+      ? location.state.processingErrorMessage
+      : null
 
   function handleHistoryLoaded(jobs: RestauracaoHistoricoItem[]) {
     const concluidas = jobs.filter((job) => job.status === 'CONCLUIDA').length
@@ -16,6 +24,11 @@ export function DashboardPage() {
 
   return (
     <div className='space-y-6'>
+      {processingErrorMessage ? (
+        <div className='rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700'>
+          Aconteceu um erro durante o processamento da sua foto. {processingErrorMessage}
+        </div>
+      ) : null}
       <section className='rounded-2xl border border-brand-100 bg-white p-6 shadow-sm'>
         <h1 className='font-display text-4xl'>Dashboard</h1>
         <p className='mt-2 text-sm text-ink/70'>Ola, {user.name}. Aqui esta um resumo da sua conta.</p>

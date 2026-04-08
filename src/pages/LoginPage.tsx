@@ -57,9 +57,13 @@ export function LoginPage() {
           }
         })
 
-        const credits = await getCreditBalance(jwtToken)
-        if (cancelled) return
-        setUserCredits(credits)
+        try {
+          const credits = await getCreditBalance(jwtToken)
+          if (cancelled) return
+          setUserCredits(credits)
+        } catch {
+          // Mantem a sessao ativa mesmo se a consulta de creditos falhar.
+        }
 
         navigate('/dashboard', { replace: true })
       } catch (error) {
